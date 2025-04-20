@@ -59,7 +59,7 @@ def file_version():
         mo = re.match("__version__ = '([^']+)'", line)
         if mo:
             ver = mo.group(1)
-            return ver
+            return ver.encode('utf-8')
     return None
 
 
@@ -104,4 +104,4 @@ def get_version():
 
 
 if __name__ == "__main__":
-    print get_version()
+    print(get_version())
