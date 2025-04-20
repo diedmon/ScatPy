@@ -357,16 +357,16 @@ class ResultTable(Table):
         self.header=hdr
 
         l=f.readline()
-        labels=split_string(l, self.c_width)
+        labels=l.split()
         for i,l in enumerate(labels):
             labels[i]=l.strip()
         self.col_lbl=labels
 
         l=f.readline()
-        dat=np.asarray(map(float, split_string(l, self.c_width)))
+        dat=np.asarray(l.split(), dtype = np.float64)
         l=f.readline()
         while  l != '':
-            dat=np.vstack([dat, np.asarray(map(float, split_string(l, self.c_width)))])
+            dat=np.vstack([dat, np.asarray(l.split(), dtype = np.float64)])
             l=f.readline()                
         
         self.data=dat
