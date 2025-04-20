@@ -33,7 +33,7 @@ from scipy.interpolate import interp1d, UnivariateSpline
 
 from collections import OrderedDict
 
-import utils
+from . import utils
 
 #def _dichroism_calculator(L,R):
 #    """
@@ -347,7 +347,7 @@ class ResultTable(Table):
                 self._load(f)
                 
         else:            
-            with open(os.path.join(self.folder, self.fname), 'Ur') as f:
+            with open(os.path.join(self.folder, self.fname), 'r') as f:
                 self._load(f)
 
     def _load(self, f):
@@ -365,7 +365,7 @@ class ResultTable(Table):
         l=f.readline()
         dat=np.asarray(map(float, split_string(l, self.c_width)))
         l=f.readline()
-        while  l <> '':
+        while  l != '':
             dat=np.vstack([dat, np.asarray(map(float, split_string(l, self.c_width)))])
             l=f.readline()                
         
@@ -393,27 +393,27 @@ class AVGTable(ResultTable):
         if folder==None:
             folder=''
             
-        print fname
+        print(fname)
 
         if 'zfile' in kwargs:
             z=zipfile.ZipFile(os.path.join(folder, kwargs['zfile']))
             f=z.open(fname, 'rU')            
         else:
             z=None
-            f=open(os.path.join(folder, fname), 'Ur')
+            f=open(os.path.join(folder, fname), 'r')
 
         ncomps = 0
         for i in range(37):
             line=f.readline()
-            if line.find('1 incident polarizations') <> -1:
+            if line.find('1 incident polarizations') != -1:
                 hdr=31
                 c_widths=[3, 6, 6, 10, 10, 11, 11]
                 plot_fields=['theta', '<|f11|^2>']
-            if line.find('2 incident polarizations') <> -1:
+            if line.find('2 incident polarizations') != -1:
                 hdr=37
                 c_widths=[6, 7,9,12,12,11,11,11,11,11,11,11]
                 plot_fields=['S_11']
-            if line.find('n=') <> -1: # Compositions
+            if line.find('n=') != -1: # Compositions
                 ncomps+=1
     
 
@@ -454,7 +454,7 @@ class AVGSummaryTable(Table):
                     f=z.open(self.fname, 'rU')            
                     self._find_pol(f)
             else:
-                with open(os.path.join(self.folder, self.fname), 'Ur') as f:
+                with open(os.path.join(self.folder, self.fname), 'r') as f:
                     self._find_pol(f)
                 
         self.refresh()
@@ -465,11 +465,11 @@ class AVGSummaryTable(Table):
         self.ncomps = 0
         for i in range(40):
             line=f.readline()
-            if line.find('1 incident polarizations') <> -1:
+            if line.find('1 incident polarizations') != -1:
                 self.npol=1
-            if line.find('2 incident polarizations') <> -1:
+            if line.find('2 incident polarizations') != -1:
                 self.npol=2
-            if line.find('n=') <> -1:
+            if line.find('n=') != -1:
                 self.ncomps +=1
 
 
@@ -485,7 +485,7 @@ class AVGSummaryTable(Table):
                 else:
                     self._refresh_2pol(f)
         else:
-            with open(os.path.join(self.folder, self.fname), 'Ur') as f:
+            with open(os.path.join(self.folder, self.fname), 'r') as f:
                 if self.npol==1:
                     self._refresh_1pol(f)
                 else:
@@ -596,7 +596,7 @@ class SCASummaryTable(Table):
                     f=z.open(self.fname, 'rU')            
                     self._find_pol(f)
             else:
-                with open(os.path.join(self.folder, self.fname), 'Ur') as f:
+                with open(os.path.join(self.folder, self.fname), 'r') as f:
                     self._find_pol(f)
                 
         self.refresh()
@@ -606,7 +606,7 @@ class SCASummaryTable(Table):
         self.npol=1
         for i in range(44):
             line=f.readline()
-            if line.find('JO=2:') <> -1:
+            if line.find('JO=2:') != -1:
                 self.npol=2
                 break
 
@@ -620,7 +620,7 @@ class SCASummaryTable(Table):
                 else:
                     self._refresh_2pol(f)
         else:
-            with open(os.path.join(self.folder, self.fname), 'Ur') as f:
+            with open(os.path.join(self.folder, self.fname), 'r') as f:
                 if self.npol==1:
                     self._refresh_1pol(f)
                 else:
@@ -805,7 +805,7 @@ class MInTable(ResultTable):
     def refresh(self):
         fname=utils.resolve_mat_file(posixpath.join(self.folder, self.fname))
 
-        with open(fname, 'Ur') as f:
+        with open(fname, 'r') as f:
             hdr=''
             for i in range(self.hdr_len):
                 hdr+=f.readline()
@@ -820,7 +820,7 @@ class MInTable(ResultTable):
             l=f.readline()
             dat=np.asarray(map(float, l.split()))
             l=f.readline()
-            while  l <> '':
+            while  l != '':
                 dat=np.vstack([dat, np.asarray(map(float, l.split()))])
                 l=f.readline()                
             
@@ -877,7 +877,7 @@ class ShapeTable(dict):
                 
         """
         
-        with open(os.path.join(self.folder, self.fname), 'Ur') as f:
+        with open(os.path.join(self.folder, self.fname), 'r') as f:
             self._load(f)
 
     def _load(self, f):
@@ -891,7 +891,7 @@ class ShapeTable(dict):
         l=f.readline()
         self.col_lbl=['JA', 'IX', 'IY', 'IZ', 'ICOMPx', 'ICOMPy', 'ICOMPz']
 
-        dat=np.loadtxt(f, np.int)
+        dat=np.loadtxt(f, np.int64)
         
         self.data=dat
         for (l,d) in zip(self.col_lbl, self.data.transpose()):
@@ -919,8 +919,8 @@ class ShapeTable(dict):
         if 'mask_points' in kwargs:
             mask_points=kwargs.pop('mask_points')
         elif self.nat>max_points:
-            print 'Warning! Large number of datapoints in target.'
-            print 'Plotting only a subset. Specify mask_points=None or an integer to force skipping value'
+            print('Warning! Large number of datapoints in target.')
+            print('Plotting only a subset. Specify mask_points=None or an integer to force skipping value')
             mask_points=int(self.nat/max_points)
         else:
             mask_points=None
@@ -967,16 +967,16 @@ class TargetTable(ShapeTable):
         self.offset=np.array(f.readline().split()[:3])
 
         l=f.readline()
-        self.col_lbl=['JA', 'IX', 'IY', 'IZ', 'ICOMPx', 'ICOMPy', 'ICOMPz']
+        self.col_lbl=['JA', 'IX', 'IY', 'IZ', 'ICOMPx', 'ICOMPy', 'ICOMPz', 'THETADF', 'PHIDF', 'BETADF']
 
         #Cannot use the faster np.loadtxt technique used by ShapeTable because
         #output often squeezes columns leaving no space between them
         c_width=[7,5,5,5,2,2,2]
         l=f.readline()
-        dat=np.asarray(map(int, split_string(l, c_width)), dtype=np.int)
+        dat = np.asarray(l.split(), dtype=np.float64)
         l=f.readline()
-        while  l <> '':
-            dat=np.vstack([dat, np.asarray(map(int, split_string(l, c_width)), dtype=np.int)])
+        while  l != '':
+            dat=np.vstack([dat, np.asarray(l.split(), dtype=np.float64)])
             l=f.readline()                
         
         self.data=dat
@@ -1229,7 +1229,7 @@ class ResultCollection(OrderedDict):
         CD=ResultCollection()
         for L in self.keys():
             if L.endswith(('LCP', '_cL')):
-                print 'Dichroism from: '+L
+                print('Dichroism from: '+L)
                 if L.endswith('LCP'):
                     match='RCP'
                 else:
@@ -1248,7 +1248,7 @@ class ResultCollection(OrderedDict):
                     cd.x_field=x_field
                     cd.y_fields=fields
                 else:
-                    print 'No complement found for %s' % L
+                    print('No complement found for %s' % L)
 
                 CD[L[:-3]]=cd
 
@@ -1300,7 +1300,7 @@ class FolderCollection(ResultCollection):
             f_key=posixpath.normpath(f_key)
             try:
                 self[f_key]=rtable(folder=f)
-                print f_key
+                print(f_key)
             except (IOError):
                 pass
 
@@ -1447,7 +1447,7 @@ class FileCollection(ResultCollection):
                        
         CD=ResultCollection()
         for l in self.keys():
-            print 'Dichroism from: '+l
+            print('Dichroism from: '+l)
             cd=self[l].summary.dichroism()
             CD[l[:-3]]=cd
 
@@ -1563,7 +1563,7 @@ class SCAHyperSpace():
 
 
         for f in flist:
-            print f
+            print(f)
             sca=SCASummaryTable(f, zfile=self.zfile)
             
             w_idx=W[sca.wave]
@@ -1597,7 +1597,7 @@ class SCAHyperSpace():
         
         for f in flist:
             try:
-                [_, w, r, k, _] = re.split('w|r|k|\.',f)
+                [_, w, r, k, _] = re.split('w|r|k|\\.',f)
             except ValueError:
                 pass
             else:
@@ -1606,7 +1606,7 @@ class SCAHyperSpace():
                 Kset.add(int(k))
     
         #identify wavelengths
-        s=re.compile('w\d+r000k000.sca')        
+        s=re.compile('w\\d+r000k000.sca')        
         l=[x for x in flist if s.match(x)]        
         W=[0]*len(Wset)    
         for (i,f) in enumerate(l):
@@ -1614,7 +1614,7 @@ class SCAHyperSpace():
             W[i]=sca.wave
         
         #identify radii
-        s=re.compile('w000r\d+k000.sca')        
+        s=re.compile('w000r\\d+k000.sca')        
         l=[x for x in flist if s.match(x)]        
         R=[0]*len(Rset)    
         for (i,f) in enumerate(l):   
@@ -1623,7 +1623,7 @@ class SCAHyperSpace():
         
         #identify angles
         beta, theta, phi=set(), set(), set()
-        s=re.compile('w000r000k\d+.sca')        
+        s=re.compile('w000r000k\\d+.sca')        
         l=[x for x in flist if s.match(x)]        
         for (i,f) in enumerate(l):   
             sca=SCASummaryTable(f, zfile=self.zfile)        
@@ -1762,7 +1762,7 @@ def plot_dichroism_from_avg(fields=None, lw=None, normalize=False, **kwargs):
     plt.ylabel(ylbl)
 
     for f in fields[1:]:
-        print f
+        print(f)
         y=dat[f]
         label=f
         if normalize:

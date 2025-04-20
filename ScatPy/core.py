@@ -14,11 +14,11 @@ import copy
 import pdb
 import inspect
 
-import targets
-import results
-import fileio
-import ranges
-import utils
+from . import targets
+from . import results
+from . import fileio
+from . import ranges
+from . import utils
 
 #: The configuration settings
 config={}
@@ -126,9 +126,9 @@ class Settings(object):
         # If available, settings come from default.par file       
         default = utils.resolve_profile('default.par')
         if default is not None: 
-            kwargs = dict(self._read_values(default).items() + kwargs.items())
+            kwargs = {**self._read_values(default), **kwargs}
                           
-        for (key, val) in kwargs.iteritems():
+        for (key, val) in kwargs.items():
             if hasattr(self, key):
                 setattr(self, key, val)
             else:
@@ -153,7 +153,7 @@ class Settings(object):
         :returns: A dict of the values
         """
         
-        f = open(fname, 'Ur')
+        f = open(fname, 'r')
         lines = [fileio._parseline(l) for l in f.readlines()]
         f.close()
     
@@ -172,9 +172,9 @@ class Settings(object):
         settings['CALPHA'] = lines[5]
         settings['CBINFLAG'] = lines[6]
     
-        settings['InitialMalloc'] = np.array(map(int, lines[8].split()))
+        settings['InitialMalloc'] = np.array(lines[8].split(), dtype=int)
         settings['NRFLD'] = True if int(lines[10]) else False
-        settings['NRFLD_EXT'] = np.array(map(float, lines[11].split()[:6]))
+        settings['NRFLD_EXT'] = np.array(lines[11].split()[:6], dtype=float)
     
         settings['TOL'] = float(lines[13])
         settings['MXITER'] = int(lines[15])
@@ -199,11 +199,11 @@ class Settings(object):
         settings['phi'] = ranges.Lin_Range.fromstring(lines[34])
     
         if lines[36].find(',') != -1:
-            settings['initial'] = map(int, lines[36].split(','))
+            settings['initial'] = list(map(int, lines[36].split(',')))
         else:
-            settings['initial'] = map(int, lines[36].split())
+            settings['initial'] = list(map(int, lines[36].split()))
     
-        settings['S_INDICES'] = map(int, lines[39].split())
+        settings['S_INDICES'] = list(map(int, lines[39].split()))
         
         settings['CMDFRM'] = lines[41]
         n_scat= int(lines[42])
@@ -324,7 +324,7 @@ class DDscat(object):
 
         s=fileio.build_ddscat_par(self.settings, self.target)
         
-        with open(os.path.join(self.folder, 'ddscat.par'), 'wb') as f:
+        with open(os.path.join(self.folder, 'ddscat.par'), 'w') as f:
             f.write(s)
 
         self.target.folder=self.folder
@@ -392,14 +392,14 @@ class DDscat(object):
         wave=self.settings.wavelengths.table
         
         table=np.vstack([wave, self.mkd, self.x, self.alpha, self.beta])
-        print "Target: ",self.target.directive, '(', self.target.__class__, ')'
-        print 'N=%d'%self.target.N
-        print 'aeff=%f'%self.target.aeff
-        print 'd=%f'%self.target.d
-        print 'wave          mkd         x           alpha       beta'
-        print '--------------------------------------------------------------'
+        print("Target: ",self.target.directive, '(', self.target.__class__, ')')
+        print('N=%d'%self.target.N)
+        print('aeff=%f'%self.target.aeff)
+        print('d=%f'%self.target.d)
+        print('wave          mkd         x           alpha       beta')
+        print('--------------------------------------------------------------')
         for r in table.transpose():
-            print r
+            print(r)
 
     @property    
     def x(self):
@@ -472,9 +472,9 @@ class DDscat(object):
             warnings.warn('DDscat output will not be displayed in IPython')
 
         if silent:
-            print 'Starting calculation...'
+            print('Starting calculation...')
             subprocess.call(command+' 2> output.log', shell=True, cwd=self.folder)
-            print 'Done!'
+            print('Done!')
         else:
             subprocess.call(command + ' 2>&1 | tee output.log', shell=True, cwd=self.folder)
 
@@ -520,7 +520,10 @@ def set_config(fname=None):
     if full_name is None:
         raise(IOError('Could not find configuration profile'))    
 
-    execfile(full_name, {} , config)
+    #execfile(full_name, {} , config)
+    with open(full_name, 'r') as f:
+        code = compile(f.read(), full_name, 'exec')
+        exec(code, {}, config)
 
     # Remove any imported modules from config
     for (k,v) in config.items():

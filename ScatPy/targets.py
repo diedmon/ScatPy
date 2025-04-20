@@ -10,14 +10,14 @@ import numpy as np
 import os
 import os.path
 import copy
-import results
+from . import results
 import warnings
 import pdb
 import matplotlib as mpl
 
-import utils
-import fileio
-import ranges
+from . import utils
+from . import fileio
+from . import ranges
 
 #: Default spacing between dipoles (in um)
 default_d=0.015 
@@ -86,7 +86,7 @@ class Target(object):
         """Return the multi-line target definition string for the ddscat.par file"""
         out='**** Target Geometry and Composition ****\n'
         out+=self.directive+'\n'
-        out+=str(tuple(self.sh_param)).translate(None, '(),')+'\n'
+        out+=str(tuple(self.sh_param)).translate(str.maketrans('', '', '(),'))+'\n'
         out+=str(len(self.material))+'\n'
         for mat in self.material:
             out+='\''+utils.resolve_mat_file(mat)+'\'\n'
@@ -110,7 +110,7 @@ class Target(object):
             #check os.environ['PATH'] to be sure
             subprocess.call(['vtrconvert', self.fname, outfile], cwd=self.folder)
         else:
-            print 'No target.out file to convert'
+            print('No target.out file to convert')
 
     @property
     def folder(self):
@@ -151,7 +151,7 @@ class Target(object):
         Load target definition from the specified file.        
         """
 
-        f = open(fname, 'Ur')
+        f = open(fname, 'r')
         lines = [fileio._parseline(l) for l in f.readlines()]
         f.close()
     
@@ -163,7 +163,11 @@ class Target(object):
             try:
                 sh_param.append(int(s))
             except ValueError:
-                sh_param.append(s)
+                try: 
+                    sh_param.append(float(s))
+                except ValueError:
+                    sh_param.append(s)
+
         values['sh_param'] = tuple(sh_param)   
 
         n_mat = int(lines[12])
@@ -587,7 +591,7 @@ class FROM_FILE(Target):
             
     def write(self):
         """Write the shape file."""
-        with open(os.path.join(self.folder, self.fname), 'wb') as f:
+        with open(os.path.join(self.folder, self.fname), 'w') as f:
             f.write(self.description+'\n') 
             f.write(str(self.N)+'\n')
             f.write(str(self.a1)[1:-1]+'\n')
@@ -759,8 +763,8 @@ class FROM_FILE(Target):
         if 'mask_points' in kwargs:
             mask_points=kwargs.pop('mask_points')
         elif self.N>max_points:
-            print 'Warning! Large number of datapoints in target.'
-            print 'Plotting only a subset. Specify mask_points=None or an integer to force skipping value'
+            print('Warning! Large number of datapoints in target.')
+            print('Plotting only a subset. Specify mask_points=None or an integer to force skipping value')
             mask_points=int(self.N/max_points)
         else:
             mask_points=1
@@ -901,7 +905,7 @@ class Helix(Iso_FROM_FILE):
 
         self.description='FROM_FILE_Helix (%f, %f, %f, %f, %f)'%(self.height, self.pitch, self.major_r, self.minor_r, self.d)            
         
-        print 'Generating Helix...'
+        print('Generating Helix...')
         #the helix dimensions in pixels
         p_height=self.height/self.d
         p_pitch=-self.pitch/self.d
@@ -918,7 +922,7 @@ class Helix(Iso_FROM_FILE):
         
         p=np.vstack([x,y,z]).transpose()
 #        p=np.vstack([np.array(u) for u in set([tuple(l) for l in p])]) #remove duplicates
-        print 'Done constructing sweep path...'
+        print('Done constructing sweep path...')
         def dist(v):
             return np.sqrt(v[:,0]**2 +v[:,1]**2 + v[:,2]**2)
             
@@ -975,7 +979,7 @@ class SpheresHelix(Iso_FROM_FILE):
 
         self.description='FROM_FILE_Helix (%f, %f, %f, %f, %f)'%(self.height, self.pitch, self.major_r, self.minor_r, self.d)            
         
-        print 'Generating Helix...'
+        print('Generating Helix...')
         #the helix dimensions in pixels
         p_height=self.height/self.d
         p_pitch=-self.pitch/self.d
@@ -990,7 +994,7 @@ class SpheresHelix(Iso_FROM_FILE):
         
         p=np.vstack([x,y,z]).transpose()
 #        p=np.vstack([np.array(u) for u in set([tuple(l) for l in p])]) #remove duplicates
-        print 'Done constructing sweep path...'
+        print('Done constructing sweep path...')
         def dist(v):
             return np.sqrt(v[:,0]**2 +v[:,1]**2 + v[:,2]**2)
             
@@ -1049,7 +1053,7 @@ class Conical_Helix(Iso_FROM_FILE):
 
         self.description='FROM_FILE_Helix (%f, %f,%f, %f, %f, %f)'%(self.height, self.pitch1, self.pitch2, self.major_r, self.minor_r, self.d)            
         
-        print 'Generating Helix...'
+        print('Generating Helix...')
         #the helix dimensions in pixels
         p_height=(self.height*(1-(self.pitch2-self.pitch1)/self.pitch2))/self.d
         p_pitch1=-self.pitch1/self.d
@@ -1076,7 +1080,7 @@ class Conical_Helix(Iso_FROM_FILE):
        
         p=np.vstack([x,y,z]).transpose()
         
-        print 'Done constructing sweep path...'
+        print('Done constructing sweep path...')
         def dist(v):
             return np.sqrt(v[:,0]**2 +v[:,1]**2 + v[:,2]**2)
             
@@ -1366,21 +1370,21 @@ def Holify(target, radius, posns=None, num=None, seed=None):
     
     new_target=target.copy()
     grid=np.ravel(new_target.grid)
-    print grid.sum()
+    print(grid.sum())
     
     for p in posns:
         p=p[:, np.newaxis]
 #        print p            
         mask_r=np.ravel_multi_index(mask+p, d_shape, mode='clip')
-        print mask_r[0]
+        print(mask_r[0])
 #        g_len=grid.sum()
-        print grid[mask_r[0]]
+        print(grid[mask_r[0]])
         grid[mask_r] &= False
-        print grid[mask_r[0]]
+        print(grid[mask_r[0]])
 
 #        print g_len, '->', grid.sum()
 
-    print grid.sum()
+    print(grid.sum())
     new_target.N = new_target.grid.sum()
     return new_target
     

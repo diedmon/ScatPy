@@ -13,10 +13,10 @@ import posixpath
 import pdb
 import copy
 
-import core
-import utils
-import ranges
-import targets
+from . import core
+from . import utils
+from . import ranges
+from . import targets
 
 def build_ddscat_par(settings, target):
     '''
@@ -39,7 +39,7 @@ def build_ddscat_par(settings, target):
     if settings.InitialMalloc is not None:
         out+=settings.InitialMalloc.__str__()[1:-1]+'\n'
     elif isinstance(target, targets.FROM_FILE):
-        out+=str(target.sh_param())[1:-1]+'\n'
+        out+=str(target.sh_param)[1:-1]+'\n'
     else:
         out+='100 100 100\n'
     
@@ -129,7 +129,7 @@ def _parseline(line):
         line = line[:min(pts)]
 
     # Remove ' and "
-    line = line.translate(None, '\'\"')    
+    line = line.translate(str.maketrans('', '', '\'\"'))  
     
     # Remove leading and trailing whitespace
     line = line.strip()

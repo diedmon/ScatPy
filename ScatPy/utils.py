@@ -15,7 +15,7 @@ from pkg_resources import resource_exists, resource_filename, resource_listdir, 
 
 from numpy.linalg import norm
 
-import core
+from . import core
 
 def gauss(x, sigma):
     
@@ -165,13 +165,13 @@ def resolve_mat_file(material):
     If it's only a filename, assume that file is found in the materials library
     
     '''
-    from core import config
+    from .core import config
 
     path=config['path_style']
 
     if path.isabs(material):
         return material
-    if path.dirname(material)<>'':
+    if path.dirname(material)!='':
         return path.expanduser(material)
     else:
         return path.normpath(path.join(path.expanduser(config['mat_library']), material))
@@ -251,7 +251,7 @@ def compress_files(folder=None, recurse=False):
             zname=os.path.join(folder, 'all_'+ext.replace('*', 'n')+'.zip')
 #            if os.path.exists(zname):
 #                ans=raw_input('%s alread exists. Do you wish to overwrite? [n]\y: '%zname)
-#                if ans.lower()<>'y':
+#                if ans.lower()!='y':
 #                    return
                     
             z=zipfile.ZipFile(zname, 'w', zipfile.ZIP_DEFLATED)
@@ -262,7 +262,7 @@ def compress_files(folder=None, recurse=False):
                 pass
             
             for f in glob.glob(os.path.join(folder, '*.'+ext)):
-                print f
+                print(f)
                 name=os.path.basename(f)
                 z.write(f, name)
                 shutil.move(f, supdir)
