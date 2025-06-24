@@ -11,7 +11,7 @@ import glob
 import numpy as np
 import shutil
 import zipfile
-from pkg_resources import resource_exists, resource_filename, resource_listdir, cleanup_resources
+import importlib.resources
 
 from numpy.linalg import norm
 
@@ -198,8 +198,10 @@ def resolve_profile(fname):
         else:
             full_name = None
 
-    if full_name is None and resource_exists('ScatPy', os.path.join('profiles', fname)):
-        return resource_filename('ScatPy', os.path.join('profiles', fname))
+    resource = importlib.resources.files('ScatPy').joinpath(os.path.join('profiles', fname))
+    exists = resource.is_file() or resource.is_dir()
+    if full_name is None and exists:
+        return importlib.resources.as_file(resource)
 
     return full_name
 
@@ -214,13 +216,13 @@ def make_profile():
     except OSError:
         raise(IOError('A folder ~./ScatPy already exists. Delete it manually before proceeding.'))
 
-    files = resource_listdir('ScatPy', 'profiles')
+    files = [entry.name for entry in importlib.resources.files('ScatPy').joinpath('profiles').iterdir()]
 
     for f in files:
-        src = resource_filename('ScatPy', os.path.join('profiles', f))
+        resource = importlib.resources.files('ScatPy').joinpath(os.path.join('profiles', f))
+        src = importlib.resources.as_file(resource)
         shutil.copy(src, home_path)
 
-    cleanup_resources()
     
 def compress_files(folder=None, recurse=False):
     """
